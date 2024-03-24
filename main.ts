@@ -15,7 +15,7 @@ interface ContextSettings {
 }
 
 interface FileTitle {
-	title: string;
+	title?: string;
 	subHeading: string;
 	content: string;
 }
@@ -25,8 +25,24 @@ const DEFAULT_SETTINGS: ContextSettings = {
 };
 
 async function getAllContexts(): Promise<string> {
+	// 获取当前笔记所包含的的二级标题
+	// 根据本页二级标题，获取其他笔记的二级标题及内容
+	// 生成新的笔记内容
+
+	// 获取当前笔记的二级标题
+
 	const AggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
+
+	const activeFile = this.app.workspace.getActiveFile();
+	if (activeFile) {
+		const content = await activeFile.vault.read(activeFile);
+		const secondaryHeading = getHeadingsAndContent(content, "# ");
+		secondaryHeading.forEach((heading) =>
+			AggregatedTitleList.set(heading.subHeading, [])
+		);
+	}
+
 	const files = this.app.vault.getMarkdownFiles();
 	for (const file of files) {
 		if (file.path === currentNotePath) {
@@ -37,14 +53,13 @@ async function getAllContexts(): Promise<string> {
 		const content = await file.vault.read(file);
 		const fileTitleContent: FileTitle[] = getHeadingsAndContent(
 			content,
+			"## ",
 			title
 		);
 
 		for (const fileTitle of fileTitleContent) {
 			if (AggregatedTitleList.has(fileTitle.subHeading)) {
 				AggregatedTitleList.get(fileTitle.subHeading)?.push(fileTitle);
-			} else {
-				AggregatedTitleList.set(fileTitle.subHeading, [fileTitle]);
 			}
 		}
 	}
@@ -66,7 +81,11 @@ const addAggregatedContent = (
 	return content;
 };
 
-const getHeadingsAndContent = (content: string, title: string) => {
+const getHeadingsAndContent = (
+	content: string,
+	type: string,
+	title?: string
+) => {
 	const lines = content.split("\n");
 	let isInSubHeading = false;
 	let currentSubHeading = "";
@@ -74,7 +93,7 @@ const getHeadingsAndContent = (content: string, title: string) => {
 	const subHeadings = [];
 
 	for (const line of lines) {
-		if (line.startsWith("## ")) {
+		if (line.startsWith(type)) {
 			// 二级标题
 			if (isInSubHeading) {
 				// 处理上一个二级标题的内容
@@ -89,7 +108,7 @@ const getHeadingsAndContent = (content: string, title: string) => {
 			}
 
 			isInSubHeading = true;
-			currentSubHeading = line.substring(3).trim();
+			currentSubHeading = line.substring(type.length).trim();
 		} else if (isInSubHeading) {
 			// 内容行
 			currentContent += line + "\n";
