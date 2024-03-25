@@ -25,19 +25,14 @@ const DEFAULT_SETTINGS: ContextSettings = {
 };
 
 async function getAllContexts(): Promise<string> {
-	// 获取当前笔记所包含的的二级标题
-	// 根据本页二级标题，获取其他笔记的二级标题及内容
-	// 生成新的笔记内容
-
-	// 获取当前笔记的二级标题
-
 	const AggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
 
 	const activeFile = this.app.workspace.getActiveFile();
+	const currentContent = await activeFile.vault.read(activeFile);
+	const secondaryHeading = getHeadingsAndContent(currentContent, "# ");
+
 	if (activeFile) {
-		const content = await activeFile.vault.read(activeFile);
-		const secondaryHeading = getHeadingsAndContent(content, "# ");
 		secondaryHeading.forEach((heading) =>
 			AggregatedTitleList.set(heading.subHeading, [])
 		);
@@ -64,21 +59,46 @@ async function getAllContexts(): Promise<string> {
 		}
 	}
 
-	return addAggregatedContent(AggregatedTitleList);
+	const aggregatedContent = createAggregatedContent(AggregatedTitleList);
+
+	return insertContentBeforeNextFirstLevelHeading(
+		currentContent,
+		aggregatedContent
+	);
 }
 
-const addAggregatedContent = (
+const createAggregatedContent = (
 	AggregatedTitleList: Map<string, FileTitle[]>
 ) => {
-	let content = "";
+	const AggregatedContent: Map<string, string> = new Map();
 	for (const [key, value] of AggregatedTitleList) {
-		content += `# ${key}\n`;
+		let content = "";
 		for (const fileTitle of value) {
 			content += `## ${fileTitle.title}\n`;
 			content += fileTitle.content;
 		}
+		AggregatedContent.set(key, content);
 	}
-	return content;
+	return AggregatedContent;
+};
+
+const insertContentBeforeNextFirstLevelHeading = (
+	content: string,
+	newContent: Map<string, string>
+): string => {
+	return content
+		.split("\n")
+		.map((line) => {
+			if (line.startsWith("# ")) {
+				const title = line.substring(2).trim();
+				if (newContent.has(title)) {
+					const newContentValue = newContent.get(title);
+					return line + "\n" + newContentValue;
+				}
+			}
+			return line;
+		})
+		.join("\n");
 };
 
 const getHeadingsAndContent = (
@@ -115,8 +135,6 @@ const getHeadingsAndContent = (
 		}
 	}
 
-	// 处理最后一个二级标题的内容
-	// 在这里对内容进行处理
 	subHeadings.push({
 		title,
 		subHeading: currentSubHeading,
@@ -161,9 +179,8 @@ export default class Context extends Plugin {
 			id: "context-cat",
 			name: "Context Cat",
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
 				const content = await getAllContexts();
-				editor.replaceSelection(content);
+				editor.setValue(content);
 			},
 		});
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
