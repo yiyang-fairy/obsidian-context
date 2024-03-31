@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS: ContextSettings = {
 };
 
 async function getAllContexts(): Promise<string> {
-	const AggregatedTitleList: Map<string, FileTitle[]> = new Map();
+	const aggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
 
 	const activeFile = this.app.workspace.getActiveFile();
@@ -34,7 +34,7 @@ async function getAllContexts(): Promise<string> {
 
 	if (activeFile) {
 		secondaryHeading.forEach((heading) =>
-			AggregatedTitleList.set(heading.subHeading, [])
+			aggregatedTitleList.set(heading.subHeading, [])
 		);
 	}
 
@@ -53,13 +53,13 @@ async function getAllContexts(): Promise<string> {
 		);
 
 		for (const fileTitle of fileTitleContent) {
-			if (AggregatedTitleList.has(fileTitle.subHeading)) {
-				AggregatedTitleList.get(fileTitle.subHeading)?.push(fileTitle);
+			if (aggregatedTitleList.has(fileTitle.subHeading)) {
+				aggregatedTitleList.get(fileTitle.subHeading)?.push(fileTitle);
 			}
 		}
 	}
 
-	const aggregatedContent = createAggregatedContent(AggregatedTitleList);
+	const aggregatedContent = createAggregatedContent(aggregatedTitleList);
 
 	return insertContentBeforeNextFirstLevelHeading(
 		currentContent,
@@ -74,7 +74,7 @@ const createAggregatedContent = (
 	for (const [key, value] of AggregatedTitleList) {
 		let content = "";
 		for (const fileTitle of value) {
-			content += `## ${fileTitle.title}\n`;
+			content += `## [[${fileTitle.title}]]\n`;
 			content += fileTitle.content;
 		}
 		AggregatedContent.set(key, content);
