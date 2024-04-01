@@ -6,12 +6,15 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	TFile,
+	TFolder,
 } from "obsidian";
 
 // Remember to rename these classes and interfaces!
 
 interface ContextSettings {
-	mySetting: string;
+	selectedFolder: string;
+	inputedFloder: string;
 }
 
 interface FileTitle {
@@ -21,10 +24,28 @@ interface FileTitle {
 }
 
 const DEFAULT_SETTINGS: ContextSettings = {
-	mySetting: "default",
+	selectedFolder: "",
+	inputedFloder: "",
 };
+const getAllFiles = (path: string) => {
+	const vault = app.vault;
+	const files: TFile[] = [];
 
-async function getAllContexts(): Promise<string> {
+	const folder = vault.getAbstractFileByPath(path);
+	if (folder instanceof TFolder) {
+		for (const item of folder.children) {
+			if (item instanceof TFile) {
+				files.push(item);
+			} else {
+				const subFiles = getAllFiles(item.path);
+				files.push(...subFiles);
+			}
+		}
+	}
+
+	return files;
+};
+async function getAllContexts(context: Context): Promise<string> {
 	const aggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
 
@@ -34,14 +55,14 @@ async function getAllContexts(): Promise<string> {
 
 	if (activeFile) {
 		secondaryHeading.forEach((heading) =>
-			aggregatedTitleList.set(heading.subHeading, [])
+			aggregatedTitleList.set(heading.subHeading.toLowerCase(), [])
 		);
 	}
 
-	const files = this.app.vault.getMarkdownFiles();
+	const files = getAllFiles(context.settings.selectedFolder);
 	for (const file of files) {
 		if (file.path === currentNotePath) {
-			continue; // 跳过当前笔记页
+			continue;
 		}
 
 		const title = file.basename;
@@ -53,8 +74,9 @@ async function getAllContexts(): Promise<string> {
 		);
 
 		for (const fileTitle of fileTitleContent) {
-			if (aggregatedTitleList.has(fileTitle.subHeading)) {
-				aggregatedTitleList.get(fileTitle.subHeading)?.push(fileTitle);
+			const key = fileTitle.subHeading.toLowerCase();
+			if (aggregatedTitleList.has(key)) {
+				aggregatedTitleList.get(key)?.push(fileTitle);
 			}
 		}
 	}
@@ -179,7 +201,7 @@ export default class Context extends Plugin {
 			id: "context-cat",
 			name: "Context Cat",
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				const content = await getAllContexts();
+				const content = await getAllContexts(this);
 				editor.setValue(content);
 			},
 		});
@@ -263,17 +285,67 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		new Setting(containerEl).setName("Context Setting");
+
 		new Setting(containerEl)
-			.setName("Setting #1")
-			.setDesc("It's a secret")
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter your secret")
-					.setValue(this.plugin.settings.mySetting)
+			.setName("选择文件夹")
+			.setDesc("选择你想查找的文件夹")
+			.addDropdown((dropdown) => {
+				const folders = getAllNoteFolders(); // 获取所有文件夹的列表
+				console.log(folders, "folders");
+				dropdown
+					.addOptions(folders) // 将文件夹列表添加为下拉框的选项
+					.setValue(this.plugin.settings.selectedFolder) // 设置下拉框的初始值为已保存的设置值
 					.onChange(async (value) => {
-						this.plugin.settings.mySetting = value;
+						this.plugin.settings.selectedFolder = value; // 将选择的文件夹保存到设置中
 						await this.plugin.saveSettings();
-					})
-			);
+
+						// 点击后展示选择的文件夹
+						showSelectedFolder(value);
+					});
+			});
+
+		new Setting(containerEl)
+			.setName("手动添加文件夹")
+			.setDesc("添加你想查找的文件夹")
+			.addText((text) => {
+				text.setPlaceholder("输入文件夹名称")
+					.setValue(this.plugin.settings.inputedFloder)
+					.onChange(async (value) => {
+						this.plugin.settings.inputedFloder = value;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 }
+
+function getAllFolders(folder: TFolder, folders: Record<string, string>) {
+	for (const item of folder.children) {
+		if (item instanceof TFolder && !folders[item.path]) {
+			folders[item.path] = item.name;
+			getAllFolders(item, folders);
+		}
+	}
+}
+
+function getAllNoteFolders(): Record<string, string> {
+	const vault = app.vault;
+	const folders: Record<string, string> = {};
+
+	for (const item of vault.getMarkdownFiles()) {
+		const folder = item.parent;
+		if (folder instanceof TFolder && !folders[folder.path]) {
+			folders[folder.path] = folder.name;
+			if (folder.path === "/") {
+				folders[folder.path] = "root";
+			}
+			getAllFolders(folder, folders);
+		}
+	}
+
+	return folders;
+}
+
+const showSelectedFolder = (folder: string) => {
+	new Notice(`Selected folder: ${folder}`);
+};
