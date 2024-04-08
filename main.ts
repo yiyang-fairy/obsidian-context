@@ -290,9 +290,8 @@ class SampleSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("选择文件夹")
 			.setDesc("选择你想查找的文件夹")
-			.addDropdown((dropdown) => {
+			.addDropdown(async (dropdown) => {
 				const folders = getAllNoteFolders(); // 获取所有文件夹的列表
-				console.log(folders, "folders");
 				dropdown
 					.addOptions(folders) // 将文件夹列表添加为下拉框的选项
 					.setValue(this.plugin.settings.selectedFolder) // 设置下拉框的初始值为已保存的设置值
@@ -322,7 +321,7 @@ class SampleSettingTab extends PluginSettingTab {
 function getAllFolders(folder: TFolder, folders: Record<string, string>) {
 	for (const item of folder.children) {
 		if (item instanceof TFolder && !folders[item.path]) {
-			folders[item.path] = item.name;
+			folders[item.path] = item.path;
 			getAllFolders(item, folders);
 		}
 	}
@@ -331,14 +330,10 @@ function getAllFolders(folder: TFolder, folders: Record<string, string>) {
 function getAllNoteFolders(): Record<string, string> {
 	const vault = app.vault;
 	const folders: Record<string, string> = {};
-
 	for (const item of vault.getMarkdownFiles()) {
 		const folder = item.parent;
 		if (folder instanceof TFolder && !folders[folder.path]) {
-			folders[folder.path] = folder.name;
-			if (folder.path === "/") {
-				folders[folder.path] = "root";
-			}
+			folders[folder.path] = folder.path;
 			getAllFolders(folder, folders);
 		}
 	}
