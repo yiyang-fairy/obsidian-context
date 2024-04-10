@@ -55,7 +55,7 @@ async function getAllContexts(context: Context): Promise<string> {
 
 	if (activeFile) {
 		secondaryHeading.forEach((heading) =>
-			aggregatedTitleList.set(heading.subHeading.toLowerCase(), [])
+			aggregatedTitleList.set(heading.subHeading, [])
 		);
 	}
 
@@ -74,19 +74,26 @@ async function getAllContexts(context: Context): Promise<string> {
 		);
 
 		for (const fileTitle of fileTitleContent) {
-			const key = fileTitle.subHeading.toLowerCase();
-			if (aggregatedTitleList.has(key)) {
-				aggregatedTitleList.get(key)?.push(fileTitle);
+			const target = fileTitle.subHeading.toLowerCase();
+
+			for (const [key, value] of aggregatedTitleList) {
+				if (target === key.toLowerCase()) {
+					aggregatedTitleList.get(key)?.push(fileTitle);
+				}
 			}
 		}
+
+		console.log();
 	}
 
 	const aggregatedContent = createAggregatedContent(aggregatedTitleList);
+	let result = "";
+	for (const item of aggregatedContent) {
+		const title = "# " + item[0] + "\n";
+		result += title + item[1] + "\n";
+	}
 
-	return insertContentBeforeNextFirstLevelHeading(
-		currentContent,
-		aggregatedContent
-	);
+	return result;
 }
 
 const createAggregatedContent = (
@@ -102,25 +109,6 @@ const createAggregatedContent = (
 		AggregatedContent.set(key, content);
 	}
 	return AggregatedContent;
-};
-
-const insertContentBeforeNextFirstLevelHeading = (
-	content: string,
-	newContent: Map<string, string>
-): string => {
-	return content
-		.split("\n")
-		.map((line) => {
-			if (line.startsWith("# ")) {
-				const title = line.substring(2).trim();
-				if (newContent.has(title)) {
-					const newContentValue = newContent.get(title);
-					return line + "\n" + newContentValue;
-				}
-			}
-			return line;
-		})
-		.join("\n");
 };
 
 const getHeadingsAndContent = (
