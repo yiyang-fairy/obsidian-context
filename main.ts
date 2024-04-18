@@ -9,10 +9,13 @@ import {
 	TFile,
 	TFolder,
 } from "obsidian";
+import * as _ from "lodash";
+import { minimatch } from "minimatch";
 
 interface ContextSettings {
 	selectedFolder: string;
-	inputedFloder: string;
+	inputtedFolder: string;
+	filterType: boolean; // true 为 glob 模式匹配； false 为文件夹匹配
 }
 
 interface FileTitle {
@@ -23,7 +26,8 @@ interface FileTitle {
 
 const DEFAULT_SETTINGS: ContextSettings = {
 	selectedFolder: "",
-	inputedFloder: "",
+	inputtedFolder: "",
+	filterType: true,
 };
 const getAllFiles = (path: string) => {
 	const vault = app.vault;
@@ -43,6 +47,25 @@ const getAllFiles = (path: string) => {
 
 	return files;
 };
+
+const isPathMatch = (path: string, globPattern: string): boolean => {
+	const patternWithAnyDirs = `**/${globPattern}/**/*.md`;
+	return minimatch(path, patternWithAnyDirs, { matchBase: true });
+};
+
+const getAllFilesByGlob = async (path: string): Promise<TFile[]> => {
+	const files: TFile[] = [];
+	const allFiles = getAllFiles("/");
+
+	for (const file of allFiles) {
+		if (isPathMatch(file.path, path)) {
+			files.push(file);
+		}
+	}
+
+	return files;
+};
+
 async function getAllContexts(context: Context): Promise<string> {
 	const aggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
@@ -57,7 +80,11 @@ async function getAllContexts(context: Context): Promise<string> {
 		);
 	}
 
-	const files = getAllFiles(context.settings.selectedFolder);
+	const filterType = context.settings.filterType;
+	const files = filterType
+		? await getAllFilesByGlob(context.settings.inputtedFolder)
+		: getAllFiles(context.settings.selectedFolder);
+
 	for (const file of files) {
 		if (file.path === currentNotePath) {
 			continue;
@@ -207,6 +234,27 @@ class SampleSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Context Setting");
 
 		new Setting(containerEl)
+			.setName("选择筛选文件方式")
+			.setDesc("以glob模式路径匹配")
+			.addToggle((value) => {
+				value
+					.setValue(this.plugin.settings.filterType)
+					.onChange((newValue) => {
+						this.plugin.settings.filterType = newValue;
+					});
+			});
+
+		new Setting(containerEl)
+			.setName("手动添加文件夹")
+			.setDesc("以glob模式匹配")
+			.addText((text) => {
+				text.setPlaceholder("输入文件夹名称")
+					.setValue(this.plugin.settings.inputtedFolder)
+					.onChange(async (value) => {
+						debouncedHandleValueChanged(value);
+					});
+			});
+		new Setting(containerEl)
 			.setName("选择文件夹")
 			.setDesc("选择你想查找的文件夹")
 			.addDropdown(async (dropdown) => {
@@ -217,36 +265,27 @@ class SampleSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.selectedFolder = value; // 将选择的文件夹保存到设置中
 						await this.plugin.saveSettings();
-
-						// 点击后展示选择的文件夹
-						showSelectedFolder(value);
 					});
 			});
 
-		new Setting(containerEl)
-			.setName("手动添加文件夹")
-			.setDesc("添加你想查找的文件夹")
-			.addText((text) => {
-				text.setPlaceholder("输入文件夹名称")
-					.setValue(this.plugin.settings.inputedFloder)
-					.onChange(async (value) => {
-						this.plugin.settings.inputedFloder = value;
-						await this.plugin.saveSettings();
-					});
-			});
+		const handleValueChanged = async (value: string) => {
+			this.plugin.settings.inputtedFolder = value;
+			await this.plugin.saveSettings();
+		};
+		const debouncedHandleValueChanged = _.debounce(handleValueChanged, 500);
 	}
 }
 
-function getAllFolders(folder: TFolder, folders: Record<string, string>) {
+const getAllFolders = (folder: TFolder, folders: Record<string, string>) => {
 	for (const item of folder.children) {
 		if (item instanceof TFolder && !folders[item.path]) {
 			folders[item.path] = item.path;
 			getAllFolders(item, folders);
 		}
 	}
-}
+};
 
-function getAllNoteFolders(): Record<string, string> {
+const getAllNoteFolders = (): Record<string, string> => {
 	const vault = app.vault;
 	const folders: Record<string, string> = {};
 	for (const item of vault.getMarkdownFiles()) {
@@ -258,8 +297,4 @@ function getAllNoteFolders(): Record<string, string> {
 	}
 
 	return folders;
-}
-
-const showSelectedFolder = (folder: string) => {
-	new Notice(`Selected folder: ${folder}`);
 };
