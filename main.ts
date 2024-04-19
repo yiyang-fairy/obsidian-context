@@ -53,7 +53,7 @@ const isPathMatch = (path: string, globPattern: string): boolean => {
 	return minimatch(path, patternWithAnyDirs, { matchBase: true });
 };
 
-const getAllFilesByGlob = async (path: string): Promise<TFile[]> => {
+const getAllFilesByGlob = (path: string): TFile[] => {
 	const files: TFile[] = [];
 	const allFiles = getAllFiles("/");
 
@@ -82,7 +82,7 @@ async function getAllContexts(context: Context): Promise<string> {
 
 	const filterType = context.settings.filterType;
 	const files = filterType
-		? await getAllFilesByGlob(context.settings.inputtedFolder)
+		? getAllFilesByGlob(context.settings.inputtedFolder)
 		: getAllFiles(context.settings.selectedFolder);
 
 	for (const file of files) {
@@ -102,7 +102,7 @@ async function getAllContexts(context: Context): Promise<string> {
 			const target = fileTitle.subHeading.toLowerCase();
 
 			for (const [key, value] of aggregatedTitleList) {
-				if (target === key.toLowerCase()) {
+				if (target.includes(key.toLowerCase())) {
 					aggregatedTitleList.get(key)?.push(fileTitle);
 				}
 			}
