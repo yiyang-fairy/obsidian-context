@@ -19,6 +19,8 @@ export const getAllNoteFolders = (): Record<string, string> => {
 			getAllFolders(folder, folders);
 		}
 	}
-
+	if (!folders["/"]) {
+		folders["/"] = "/";
+	}
 	return folders;
 };
