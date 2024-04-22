@@ -47,6 +47,7 @@ export async function getAllContexts(context: Context): Promise<string> {
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
 	const secondaryHeading = getHeadingsAndContent(currentContent, "# ");
+	const delimiter = context.settings.delimiter;
 
 	if (activeFile) {
 		secondaryHeading.forEach((heading) =>
@@ -69,7 +70,8 @@ export async function getAllContexts(context: Context): Promise<string> {
 		const fileTitleContent: FileTitle[] = getHeadingsAndContent(
 			content,
 			"## ",
-			title
+			title,
+			delimiter
 		);
 
 		for (const fileTitle of fileTitleContent) {
@@ -112,7 +114,8 @@ const createAggregatedContent = (
 const getHeadingsAndContent = (
 	content: string,
 	type: string,
-	title?: string
+	title?: string,
+	delimiter?: string
 ) => {
 	const lines = content.split("\n");
 	let isInSubHeading = false;
@@ -121,7 +124,10 @@ const getHeadingsAndContent = (
 	const subHeadings = [];
 
 	for (const line of lines) {
-		if (line.startsWith(type)) {
+		if (
+			line.startsWith(type) ||
+			(delimiter && line.startsWith(delimiter))
+		) {
 			// 二级标题
 			if (isInSubHeading) {
 				// 处理上一个二级标题的内容

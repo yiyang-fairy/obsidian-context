@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: ContextSettings = {
 	selectedFolder: "",
 	inputtedFolder: "",
 	filterType: true,
+	delimiter: "",
 };
 
 export default class Context extends Plugin {
@@ -105,6 +106,20 @@ class SampleSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.selectedFolder) // 设置下拉框的初始值为已保存的设置值
 					.onChange(async (value) => {
 						this.plugin.settings.selectedFolder = value; // 将选择的文件夹保存到设置中
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName("自定义分隔符")
+			.setDesc(
+				"对于需要需要聚合的标题的内容提前终止截取（以输入分隔符开头即匹配）"
+			)
+			.addText((text) => {
+				text.setPlaceholder("输入分隔符")
+					.setValue(this.plugin.settings.delimiter)
+					.onChange(async (value) => {
+						this.plugin.settings.delimiter = value.trim(); // 将选择的文件夹保存到设置中
 						await this.plugin.saveSettings();
 					});
 			});

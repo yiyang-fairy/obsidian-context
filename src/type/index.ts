@@ -2,6 +2,7 @@ export interface ContextSettings {
 	selectedFolder: string;
 	inputtedFolder: string;
 	filterType: boolean; // true 为 glob 模式匹配； false 为文件夹匹配
+	delimiter: string; // 分隔符
 }
 
 export interface FileTitle {
