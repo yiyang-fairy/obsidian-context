@@ -1,7 +1,7 @@
 import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 import { ContextSettings } from "./type";
 import { getAllContexts } from "./buildView/aggregatedContent";
-import { SampleSettingTab } from "./setting";
+import { ContextSettingTab } from "./setting";
 
 const DEFAULT_SETTINGS: ContextSettings = {
 	selectedFolder: "",
@@ -33,7 +33,7 @@ export default class Context extends Plugin {
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new ContextSettingTab(this.app, this));
 	}
 
 	onunload() {}
