@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
+import { Editor, MarkdownView, Plugin } from "obsidian";
 import { ContextSettings } from "./type";
 import { getAllContexts } from "./buildView/aggregatedContent";
 import { ContextSettingTab } from "./setting";
@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS: ContextSettings = {
 	selectedFolder: "",
 	inputtedFolder: "",
 	filterType: true,
-	delimiter: "",
+	// delimiter: "",
 };
 
 export default class Context extends Plugin {
