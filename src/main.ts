@@ -17,9 +17,12 @@ export default class Context extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon("cat", "Context", (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice("This is a notice! hahaha");
+		this.addRibbonIcon("cat", "Context Cat", async (evt: MouseEvent) => {
+			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (view) {
+				const content = await getAllContexts(this);
+				view.editor.setValue(content);
+			}
 		});
 
 		// This adds an editor command that can perform some operation on the current editor instance
