@@ -46,7 +46,7 @@ export async function getAllContexts(context: Context): Promise<string> {
 
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
-	const targetHeading = getTargetH1(currentContent);
+	const targetHeading = getTargetH1(currentContent) || [activeFile.basename];
 	// const delimiter = context.settings.delimiter;
 
 	if (activeFile) {
@@ -170,5 +170,5 @@ const getTargetH1 = (content: string) => {
 			result.push(h1);
 		}
 	});
-	return result;
+	return result.length > 0 ? result : null;
 };
