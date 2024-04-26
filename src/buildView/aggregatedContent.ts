@@ -46,12 +46,12 @@ export async function getAllContexts(context: Context): Promise<string> {
 
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
-	const secondaryHeading = getHeadingsAndContent(currentContent, "# ");
+	const targetHeading = getTargetH1(currentContent);
 	// const delimiter = context.settings.delimiter;
 
 	if (activeFile) {
-		secondaryHeading.forEach((heading) =>
-			aggregatedTitleList.set(heading.subHeading, [])
+		targetHeading.forEach((heading) =>
+			aggregatedTitleList.set(heading, [])
 		);
 	}
 
@@ -122,11 +122,16 @@ const getHeadingsAndContent = (
 	let currentSubHeading = "";
 	let currentContent = "";
 	const subHeadings = [];
+	let isH2 = false;
 
 	for (const line of lines) {
+		if (line.startsWith("# ")) {
+			isH2 = false;
+		}
 		if (line.startsWith(type)) {
+			isH2 = true;
 			// 二级标题
-			if (isInSubHeading) {
+			if (isInSubHeading && isH2) {
 				// 处理上一个二级标题的内容
 				// 在这里对内容进行处理
 				subHeadings.push({
@@ -140,7 +145,7 @@ const getHeadingsAndContent = (
 
 			isInSubHeading = true;
 			currentSubHeading = line.substring(type.length).trim();
-		} else if (isInSubHeading) {
+		} else if (isInSubHeading && isH2) {
 			// 内容行
 			currentContent += line + "\n";
 		}
@@ -153,4 +158,17 @@ const getHeadingsAndContent = (
 	});
 
 	return subHeadings;
+};
+
+const getTargetH1 = (content: string) => {
+	const lines = content.split("\n");
+	const result: string[] = [];
+	lines.map((line) => {
+		//匹配一级标题
+		if (line.startsWith("# ")) {
+			const h1 = line.substring(2).trim();
+			result.push(h1);
+		}
+	});
+	return result;
 };
