@@ -20,7 +20,7 @@ export class ContextSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("选择筛选文件方式")
-			.setDesc("以glob模式路径匹配")
+			.setDesc("以glob模式匹配")
 			.addToggle((value) => {
 				value
 					.setValue(this.plugin.settings.filterType)
@@ -34,8 +34,10 @@ export class ContextSettingTab extends PluginSettingTab {
 
 		if (this.plugin.settings.filterType) {
 			new Setting(this.containerEl)
-				.setName("手动添加文件夹")
-				.setDesc("以glob模式匹配")
+				.setName("以glob模式匹配")
+				.setDesc(
+					"根据你输入的glob模式的文件夹名称进行匹配，如：**/test/**"
+				)
 				.addText((text) => {
 					text.setPlaceholder("输入文件夹名称")
 						.setValue(this.plugin.settings.inputtedFolder)
