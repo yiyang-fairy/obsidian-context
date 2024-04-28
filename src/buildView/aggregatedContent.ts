@@ -46,6 +46,13 @@ export async function getAllContexts(context: Context): Promise<string> {
 
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
+	console.log(currentContent, "currentContent");
+	console.log(
+		getFileProperties(currentContent),
+		"getFileProperties(currentContent)"
+	);
+	const isGetTag = true;
+
 	const targetHeading = getTargetH1(currentContent) || [activeFile.basename];
 	// const delimiter = context.settings.delimiter;
 
@@ -59,6 +66,11 @@ export async function getAllContexts(context: Context): Promise<string> {
 	const files = filterType
 		? getAllFilesByGlob(context.settings.inputtedFolder)
 		: getAllFiles(context.settings.selectedFolder);
+	const allTags = getAllTags(files, currentNotePath);
+
+	if (isGetTag) {
+		return allTags;
+	}
 
 	for (const file of files) {
 		if (file.path === currentNotePath) {
@@ -172,3 +184,49 @@ const getTargetH1 = (content: string) => {
 	});
 	return result.length > 0 ? result : null;
 };
+function getFileProperties(currentContent: string): any {
+	const lines = currentContent.split("\n");
+	let result = "";
+	let inProperty = false;
+	for (const line of lines) {
+		if (line.startsWith("---")) {
+			inProperty = true;
+			continue;
+		}
+		if (inProperty && line.startsWith("---")) {
+			inProperty = false;
+			result += line + "\n";
+		}
+		if (inProperty) {
+			result += line + "\n";
+		}
+	}
+	console.log(result, "result");
+
+	return result;
+}
+async function getAllTags(files: TFile[], currentNotePath: string) {
+	let result = "";
+	for (const file of files) {
+		if (file.path === currentNotePath) {
+			continue;
+		}
+		const content = await file.vault.read(file);
+		result += getTags(content) ? getTags(content) + "\n" : "";
+	}
+	console.log(result, "result");
+	return result;
+}
+
+function getTags(content: string) {
+	const lines = content.split("\n");
+	const result: string[] = [];
+	lines.map((line) => {
+		const regex = /\s#(\S+)/;
+		const match = line.match(regex);
+		if (match && match.length > 0) {
+			result.push(line + " \n");
+		}
+	});
+	return result.join("\n");
+}
