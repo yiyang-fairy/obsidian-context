@@ -1,96 +1,54 @@
-# Obsidian Sample Plugin
+# 介绍
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Context Cat 是一款提供聚合功能的 obsidian 插件。它可以根据你设定好的标题进行指定范围的抓取内容，并聚合到当前你输入指令的页面。
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+# 安装和使用
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+## 使用
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### 聚合标题
 
-## First time developing plugins?
+打开一个空白页面，在页面上以一级标题的形式写下你想要聚合的二级标题，例如：
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/b540b76b-0ced-4214-baf8-2f3cf1438ae5)
+接下来，有两个方法聚合标题
+#### 方法一：
+点击左侧猫猫头图标即可聚合你想要的二级标题
 
-Quick starting guide for new plugin devs:
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/ed44faad-280c-4e79-a61e-33a223a972c1)
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+#### 方法二：
+按 `Ctrl+P`（或 `Cmd+P` 在 macOS 上）打开命令面板，并输入 `Context Cat` 按下回车即可
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/1b97da79-ab38-4aa7-8b7f-bb1f9eed5761)
 
-## Releasing new releases
+然后你就能看到所有你想要聚合标题和内容了：
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/40f9d2f9-3fb9-43e1-9b25-12898345197c)
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+在这里还展示了对应的文章标题，方便你回到原文查看
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### 聚合 Tag
 
-## Adding your plugin to the community plugin list
+首先在当前页面顶部输入 `---` 调出文档属性，
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+在属性栏添加 `key` 为 *catTags*， `value` 为你想要聚合的 tag，如果你想聚合多个 tag, 你可以使用 *&* 连接他们，例如：
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/5b176896-f6e3-4f5b-b784-263deb44eb11)
 
-## How to use
+接下来，同聚合标题的方法一样，点击左侧 *猫猫头* 或者打开命令面板输入 *Context Cat* 来进行聚合，结果示例：
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/2c6afdc7-c8a7-49bf-adae-c91e008650c2)
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## 注意
+聚合标题与聚合 tag 只能二者选其一，并且聚合 tag 的优先级高于聚合标题
+# 设置
 
-## Manually installing the plugin
+## 设置文件夹筛选范围
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+点击 obsidian 的设置，再点击第三方插件下的 *Context Cat*，可以看到：
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/0529426e-1e82-4cf0-bcbf-0c0078807370)
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+在这里，你可以对文件的筛选范围做限定，并且为你提供了两种筛选文件夹的方式：
+### 以文件夹选择的方式
 
-## Funding URL
+点击下拉框， 可以看到你的所有文件夹，选择你想要筛选的文件夹，之后的筛选范围则只会是你筛选的文件夹
 
-You can include funding URLs where people who use your plugin can financially support it.
+### 以glob模式匹配
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+在右侧输入框中输入glob模式的文件路径，例如输入 `/**/!(assets)/**` ，则后续对文件的筛选会跳过 assets 文件夹；输入 `/diaries/**/* 则只在根目录下的 diaries 文件夹中进行筛选
