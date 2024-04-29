@@ -31,6 +31,7 @@ export default class Context extends Plugin {
 			name: "Context Cat",
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				const content = await getAllContexts(this);
+				console.log(content, "tags");
 				editor.setValue(content);
 			},
 		});

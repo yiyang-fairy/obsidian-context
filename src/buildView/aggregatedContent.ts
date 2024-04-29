@@ -43,10 +43,25 @@ const getAllFilesByGlob = (path: string): TFile[] => {
 export async function getAllContexts(context: Context): Promise<string> {
 	const aggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
-
+	const filterType = context.settings.filterType;
+	const files = filterType
+		? getAllFilesByGlob(context.settings.inputtedFolder)
+		: getAllFiles(context.settings.selectedFolder);
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
+
 	const targetHeading = getTargetH1(currentContent) || [activeFile.basename];
+	const { property, propertyString } = getFileProperties(currentContent);
+
+	if (property["catTags"]) {
+		const allTags = await getAllTags(
+			files,
+			currentNotePath,
+			property["catTags"]
+		);
+
+		return propertyString + "\n" + allTags;
+	}
 	// const delimiter = context.settings.delimiter;
 
 	if (activeFile) {
@@ -54,11 +69,6 @@ export async function getAllContexts(context: Context): Promise<string> {
 			aggregatedTitleList.set(heading, [])
 		);
 	}
-
-	const filterType = context.settings.filterType;
-	const files = filterType
-		? getAllFilesByGlob(context.settings.inputtedFolder)
-		: getAllFiles(context.settings.selectedFolder);
 
 	for (const file of files) {
 		if (file.path === currentNotePath) {
@@ -171,4 +181,94 @@ const getTargetH1 = (content: string) => {
 		}
 	});
 	return result.length > 0 ? result : null;
+};
+const getFileProperties = (currentContent: string) => {
+	const lines = currentContent.split("\n");
+	let result = "";
+	let inProperty = false;
+	for (const line of lines) {
+		if (line.startsWith("---")) {
+			if (inProperty) {
+				result += line + "\n";
+				break;
+			}
+			inProperty = true;
+		} else if (inProperty) {
+			result += line + "\n";
+		}
+	}
+	const obj: { [key: string]: string[] } = {};
+	const resultLines = result.split("\n");
+	let key = "";
+	let value: string[] = [];
+	for (const line of resultLines) {
+		if (line.startsWith("---") || line === "") {
+			continue;
+		}
+		if (line.match(/^[a-zA-Z0-9_]+:/)) {
+			if (key) {
+				obj[key] = value;
+			}
+			key = line.split(":")[0].trim();
+			value = line.split(":")[1].trim()
+				? line.split(":")[1].trim().split("&")
+				: [];
+		} else {
+			if (line.trim().startsWith("-")) {
+				value.push(line.trim().substring(1).trim());
+			}
+		}
+	}
+	obj[key] = value;
+
+	return {
+		property: obj,
+		propertyString: "---\n" + result,
+	};
+};
+const getAllTags = async (
+	files: TFile[],
+	currentNotePath: string,
+	targetTags: string[]
+) => {
+	const targetTagsObj: { [key: string]: string[] } = {};
+	targetTags.forEach((tag) => {
+		targetTagsObj[tag] = [];
+	});
+	for (const file of files) {
+		if (file.path === currentNotePath) {
+			continue;
+		}
+		const content = await file.vault.read(file);
+		getTags(content, targetTagsObj);
+	}
+
+	return tagsToString(targetTagsObj);
+};
+
+const tagsToString = (targetTagsObj: { [key: string]: string[] }) => {
+	let result = "";
+	for (const [key, value] of Object.entries(targetTagsObj)) {
+		result += `# ${key}\n`;
+		for (const item of value) {
+			result += "\n" + item + "\n";
+		}
+	}
+	return result;
+};
+const getTags = (content: string, targetTag: { [key: string]: string[] }) => {
+	const lines = content.split("\n");
+	for (const line of lines) {
+		const regex = /\s#(\S+)/;
+		const match = line.match(regex);
+
+		if (!match) {
+			continue;
+		}
+		match.forEach((item) => {
+			if (Object.keys(targetTag).includes(item.split("#")[1])) {
+				targetTag[item.split("#")[1]].push(line);
+			}
+		});
+	}
 };
