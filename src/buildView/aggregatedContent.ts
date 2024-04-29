@@ -50,12 +50,10 @@ export async function getAllContexts(context: Context): Promise<string> {
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
 
-	const isGetTag = true;
-
 	const targetHeading = getTargetH1(currentContent) || [activeFile.basename];
+	const { property, propertyString } = getFileProperties(currentContent);
 
-	if (isGetTag) {
-		const { property, propertyString } = getFileProperties(currentContent);
+	if (property["catTags"]) {
 		const allTags = await getAllTags(
 			files,
 			currentNotePath,
@@ -184,7 +182,7 @@ const getTargetH1 = (content: string) => {
 	});
 	return result.length > 0 ? result : null;
 };
-const getFileProperties = (currentContent: string): any => {
+const getFileProperties = (currentContent: string) => {
 	const lines = currentContent.split("\n");
 	let result = "";
 	let inProperty = false;
@@ -225,7 +223,7 @@ const getFileProperties = (currentContent: string): any => {
 
 	return {
 		property: obj,
-		propertyString: "---\n" + result + "\n",
+		propertyString: "---\n" + result,
 	};
 };
 const getAllTags = async (
