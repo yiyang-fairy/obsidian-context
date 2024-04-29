@@ -43,33 +43,33 @@ const getAllFilesByGlob = (path: string): TFile[] => {
 export async function getAllContexts(context: Context): Promise<string> {
 	const aggregatedTitleList: Map<string, FileTitle[]> = new Map();
 	const currentNotePath = this.app.workspace.getActiveFile()?.path;
-
+	const filterType = context.settings.filterType;
+	const files = filterType
+		? getAllFilesByGlob(context.settings.inputtedFolder)
+		: getAllFiles(context.settings.selectedFolder);
 	const activeFile = this.app.workspace.getActiveFile();
 	const currentContent = await activeFile.vault.read(activeFile);
-	console.log(currentContent, "currentContent");
-	console.log(
-		getFileProperties(currentContent),
-		"getFileProperties(currentContent)"
-	);
+
 	const isGetTag = true;
 
 	const targetHeading = getTargetH1(currentContent) || [activeFile.basename];
+
+	if (isGetTag) {
+		const { property, propertyString } = getFileProperties(currentContent);
+		const allTags = await getAllTags(
+			files,
+			currentNotePath,
+			property["catTags"]
+		);
+
+		return propertyString + "\n" + allTags;
+	}
 	// const delimiter = context.settings.delimiter;
 
 	if (activeFile) {
 		targetHeading.forEach((heading) =>
 			aggregatedTitleList.set(heading, [])
 		);
-	}
-
-	const filterType = context.settings.filterType;
-	const files = filterType
-		? getAllFilesByGlob(context.settings.inputtedFolder)
-		: getAllFiles(context.settings.selectedFolder);
-	const allTags = getAllTags(files, currentNotePath);
-
-	if (isGetTag) {
-		return allTags;
 	}
 
 	for (const file of files) {
@@ -184,49 +184,93 @@ const getTargetH1 = (content: string) => {
 	});
 	return result.length > 0 ? result : null;
 };
-function getFileProperties(currentContent: string): any {
+const getFileProperties = (currentContent: string): any => {
 	const lines = currentContent.split("\n");
 	let result = "";
 	let inProperty = false;
 	for (const line of lines) {
 		if (line.startsWith("---")) {
+			if (inProperty) {
+				result += line + "\n";
+				break;
+			}
 			inProperty = true;
-			continue;
-		}
-		if (inProperty && line.startsWith("---")) {
-			inProperty = false;
-			result += line + "\n";
-		}
-		if (inProperty) {
+		} else if (inProperty) {
 			result += line + "\n";
 		}
 	}
-	console.log(result, "result");
+	const obj: { [key: string]: string[] } = {};
+	const resultLines = result.split("\n");
+	let key = "";
+	let value: string[] = [];
+	for (const line of resultLines) {
+		if (line.startsWith("---") || line === "") {
+			continue;
+		}
+		if (line.match(/^[a-zA-Z0-9_]+:/)) {
+			if (key) {
+				obj[key] = value;
+			}
+			key = line.split(":")[0].trim();
+			value = line.split(":")[1].trim()
+				? line.split(":")[1].trim().split("&")
+				: [];
+		} else {
+			if (line.trim().startsWith("-")) {
+				value.push(line.trim().substring(1).trim());
+			}
+		}
+	}
+	obj[key] = value;
 
-	return result;
-}
-async function getAllTags(files: TFile[], currentNotePath: string) {
-	let result = "";
+	return {
+		property: obj,
+		propertyString: "---\n" + result + "\n",
+	};
+};
+const getAllTags = async (
+	files: TFile[],
+	currentNotePath: string,
+	targetTags: string[]
+) => {
+	const targetTagsObj: { [key: string]: string[] } = {};
+	targetTags.forEach((tag) => {
+		targetTagsObj[tag] = [];
+	});
 	for (const file of files) {
 		if (file.path === currentNotePath) {
 			continue;
 		}
 		const content = await file.vault.read(file);
-		result += getTags(content) ? getTags(content) + "\n" : "";
+		getTags(content, targetTagsObj);
 	}
-	console.log(result, "result");
-	return result;
-}
 
-function getTags(content: string) {
+	return tagsToString(targetTagsObj);
+};
+
+const tagsToString = (targetTagsObj: { [key: string]: string[] }) => {
+	let result = "";
+	for (const [key, value] of Object.entries(targetTagsObj)) {
+		result += `# ${key}\n`;
+		for (const item of value) {
+			result += "\n" + item + "\n";
+		}
+	}
+	return result;
+};
+const getTags = (content: string, targetTag: { [key: string]: string[] }) => {
 	const lines = content.split("\n");
-	const result: string[] = [];
-	lines.map((line) => {
+	for (const line of lines) {
 		const regex = /\s#(\S+)/;
 		const match = line.match(regex);
-		if (match && match.length > 0) {
-			result.push(line + " \n");
+
+		if (!match) {
+			continue;
 		}
-	});
-	return result.join("\n");
-}
+		match.forEach((item) => {
+			if (Object.keys(targetTag).includes(item.split("#")[1])) {
+				targetTag[item.split("#")[1]].push(line);
+			}
+		});
+	}
+};
