@@ -1,6 +1,9 @@
 import { Editor, MarkdownView, Plugin } from "obsidian";
 import { ContextSettings } from "./type";
-import { getAllContexts } from "./buildView/aggregatedContent";
+import {
+	autoUpdateContext,
+	updateContext,
+} from "./buildView/aggregatedContent";
 import { ContextSettingTab } from "./setting";
 
 const DEFAULT_SETTINGS: ContextSettings = {
@@ -20,23 +23,32 @@ export default class Context extends Plugin {
 		this.addRibbonIcon("cat", "Context Cat", async (evt: MouseEvent) => {
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (view) {
-				const content = await getAllContexts(this);
-				view.editor.setValue(content);
+				updateContext(view.editor, this);
 			}
 		});
-
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: "context-cat",
 			name: "Context Cat",
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				const content = await getAllContexts(this);
-				editor.setValue(content);
+				updateContext(editor, this);
 			},
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new ContextSettingTab(this.app, this));
+		this.registerEvent(
+			this.app.workspace.on(
+				"active-leaf-change",
+				this.onActiveLeafChange.bind(this)
+			)
+		);
+	}
+	async onActiveLeafChange() {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (activeFile) {
+			autoUpdateContext(activeFile, this);
+		}
 	}
 
 	onunload() {}

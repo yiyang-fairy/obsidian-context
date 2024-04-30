@@ -1,5 +1,5 @@
 import { minimatch } from "minimatch";
-import { TFile, TFolder } from "obsidian";
+import { Editor, MarkdownView, TFile, TFolder } from "obsidian";
 import Context from "src/main";
 import { FileTitle } from "src/type";
 
@@ -278,4 +278,27 @@ const getTags = (content: string, targetTag: { [key: string]: string[] }) => {
 			}
 		});
 	}
+};
+
+export const autoUpdateContext = async (
+	currentFile: TFile | null,
+	context: Context
+) => {
+	if (!currentFile) {
+		return;
+	}
+	const content = await context.app.vault.read(currentFile);
+	const { property } = getFileProperties(content);
+
+	if (property["catAutoUpdate"] && property["catAutoUpdate"][0] == "true") {
+		const view = context.app.workspace.getActiveViewOfType(MarkdownView);
+		if (view) {
+			updateContext(view.editor, context);
+		}
+	}
+};
+
+export const updateContext = async (editor: Editor, context: Context) => {
+	const content = await getAllContexts(context);
+	editor.setValue(content);
 };
