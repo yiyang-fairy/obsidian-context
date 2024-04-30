@@ -103,7 +103,7 @@ export async function getAllContexts(context: Context): Promise<string> {
 		result += title + item[1] + "\n";
 	}
 
-	return result;
+	return propertyString + "\n" + result;
 }
 
 const createAggregatedContent = (
@@ -189,6 +189,7 @@ const getFileProperties = (currentContent: string) => {
 	for (const line of lines) {
 		if (line.startsWith("---")) {
 			if (inProperty) {
+				inProperty = false;
 				result += line + "\n";
 				break;
 			}
@@ -197,6 +198,13 @@ const getFileProperties = (currentContent: string) => {
 			result += line + "\n";
 		}
 	}
+	if (inProperty) {
+		return {
+			property: {},
+			propertyString: "",
+		};
+	}
+
 	const obj: { [key: string]: string[] } = {};
 	const resultLines = result.split("\n");
 	let key = "";
@@ -220,10 +228,9 @@ const getFileProperties = (currentContent: string) => {
 		}
 	}
 	obj[key] = value;
-
 	return {
 		property: obj,
-		propertyString: "---\n" + result,
+		propertyString: result ? "---\n" + result : "",
 	};
 };
 const getAllTags = async (
