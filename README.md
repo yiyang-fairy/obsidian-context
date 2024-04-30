@@ -8,7 +8,7 @@ Context Cat 是一款提供聚合功能的 obsidian 插件。它可以根据你�
 
 ### 聚合标题
 
-打开一个空白页面，在页面上以一级标题的形式写下你想要聚合的二级标题，例如：
+打开一个空白页面，在页面上以一级标题的形式写下你想要聚合的二级标题，（当你没有输入一级标题的时候，会以你当前文件的文件名作为一级标题）例如：
 ![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/b540b76b-0ced-4214-baf8-2f3cf1438ae5)
 接下来，有两个方法聚合标题
 #### 方法一：
@@ -29,7 +29,7 @@ Context Cat 是一款提供聚合功能的 obsidian 插件。它可以根据你�
 
 首先在当前页面顶部输入 `---` 调出文档属性，
 
-在属性栏添加 `key` 为 *catTags*， `value` 为你想要聚合的 tag，如果你想聚合多个 tag, 你可以使用 *&* 连接他们，例如：
+在属性栏添加 `key` 为 *catTags*， `value` 为你想要聚合的 tag，如果你想聚合多个 tag，可以将 `catTags` 属性类型设为 *list* ，也可以设置 `catTags` 属性类型为 *text*， 然后使用 *&* 连接他们，例如：
 ![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/5b176896-f6e3-4f5b-b784-263deb44eb11)
 
 接下来，同聚合标题的方法一样，点击左侧 *猫猫头* 或者打开命令面板输入 *Context Cat* 来进行聚合，结果示例：
@@ -52,3 +52,15 @@ Context Cat 是一款提供聚合功能的 obsidian 插件。它可以根据你�
 ### 以glob模式匹配
 
 在右侧输入框中输入glob模式的文件路径，例如输入 `/**/!(assets)/**` ，则后续对文件的筛选会跳过 assets 文件夹；输入 `/diaries/**/* 则只在根目录下的 diaries 文件夹中进行筛选
+
+## 文档属性
+
+在页面顶部输入 `---` 调出文档属性，对于我们 `Context Cat` 插件，我们提供了一些特殊的字段来增加额外的功能。
+例如上文中用到过的 `catTags` 字段用来聚合 tag，除此之外，还有 `catAutoUpdate` 等字段，接下来一一介绍：
+### catAutoUpdate
+
+每次进入页面都需要使用命令或点击猫猫头来实现聚合，这样是否还是不够方便？
+
+只要在文档属性里设置 `catAutoUpdate` 为 `true` 即可*自动更新*
+
+该字段建议将类型设置为 `checkbox` 类型或者 `text` 类型，它的值为 true 或 false，表示的是是否自动执行聚合功能
