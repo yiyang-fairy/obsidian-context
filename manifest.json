@@ -1,11 +1,10 @@
 {
-	"id": "context",
-	"name": "Context",
+	"id": "obsidian-plugin-context",
+	"name": "Context Cat",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "一个提供聚合上下文功能的 obsidian 插件",
+	"author": "yiyang-fairy",
+	"authorUrl": "https://github.com/yiyang-fairy",
 	"isDesktopOnly": false
 }
