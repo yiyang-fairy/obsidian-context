@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-plugin-context",
+	"id": "context-cat",
 	"name": "Context Cat",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "一个提供聚合上下文功能的 obsidian 插件",
+	"description": "An Obsidian plugin that provides aggregated context functionality",
 	"author": "yiyang-fairy",
 	"authorUrl": "https://github.com/yiyang-fairy",
 	"isDesktopOnly": false
