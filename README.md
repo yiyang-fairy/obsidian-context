@@ -8,15 +8,21 @@ Context Cat 是一款提供聚合功能的 obsidian 插件。它可以根据你�
 
 进入 https://github.com/yiyang-fairy/obsidian-context/releases/ 页面，选择最新的版本
 进行下载。
-两种方式： 
+
+两种方式：
+
 - 下载压缩包并解压到你的 `**\.obsidian\plugins\` 文件夹中，打开项目根目录，命令行输入
+
 ```
 npm install
 
 npm run dev
 ```
+
 再重启 obsidian 即可正常使用
+
 - 在你的 `**\.obsidian\plugins\` 文件夹中创建一个`contextCat`文件夹（也可以定义为别的名字），将`main.js`，`manifest.json` 和 `style.css` 这三个文件下载到你创建好的`**\.obsidian\plugins\contextCat\` 文件夹中，再重启 obsidian 即可正常使用
+
 ## 使用
 
 ### 聚合标题
@@ -33,8 +39,8 @@ npm run dev
 
 #### 方法二：
 
-按 `Ctrl+P`（或 `Cmd+P` 在 macOS 上）打开命令面板，并输入 `Context Cat` 按下回车即可
-![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/1e213a32-844b-489e-be99-7fe442291c85)
+按 `Ctrl+P`（或 `Cmd+P` 在 macOS 上）打开命令面板，并输入 `Context Cat: Aggregate current context` 按下回车即可
+![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/955d1ba4-8d3c-49b6-ba56-ca19e5ec0b7a)
 
 然后你就能看到所有你想要聚合标题和内容了：
 ![image](https://github.com/yiyang-fairy/obsidian-context/assets/51814167/10701f28-31ca-49bf-bc10-cca7d0f5b218)
@@ -87,3 +93,7 @@ npm run dev
 只要在文档属性里设置 `catAutoUpdate` 为 `true` 即可*自动更新*
 
 该字段建议将类型设置为 `checkbox` 类型或者 `text` 类型，它的值为 true 或 false，未设置时默认为 false 。表示的是在打开带有 `catAutoUpdate` 文档属性的文件时，是否自动执行聚合功能
+
+# 最后
+
+插件仍在更新中，欢迎提出建议☺

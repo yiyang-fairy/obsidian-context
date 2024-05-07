@@ -20,7 +20,7 @@ export default class Context extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon("cat", "Context Cat", async (evt: MouseEvent) => {
+		this.addRibbonIcon("cat", "聚合当前标题", async (evt: MouseEvent) => {
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (view) {
 				updateContext(view.editor, this);
@@ -28,8 +28,8 @@ export default class Context extends Plugin {
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
-			id: "context-cat",
-			name: "Context Cat",
+			id: "aggregate-current-context",
+			name: "Aggregate current context",
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				updateContext(editor, this);
 			},
